@@ -1,78 +1,83 @@
-import pygame
-import sys
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web-based Maze Game</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+</head>
+<body>
+  <script>
+    const config = {
+      type: Phaser.AUTO,
+      width: 1500,
+      height: 800,
+      scene: {
+        preload: preload,
+        create: create,
+        update: update
+      },
+      physics: {
+        default: 'arcade',
+        arcade: {
+          gravity: { y: 0 },
+          debug: false
+        }
+      }
+    };
 
-# Initialize Pygame
-pygame.init()
+    const game = new Phaser.Game(config);
+    let player;
+    let moving = false; // Track if the player is moving
+    let velocityX = 0;
+    let velocityY = 0;
 
-# Set up display
-screen = pygame.display.set_mode((400, 400))
-pygame.display.set_caption("Simple Maze Game")
+    function preload() {
+      this.load.image('player', 'b.png');
+    }
 
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
+    function create() {
+      player = this.physics.add.sprite(200, 200, 'player');
+      player.setBounce(1); // Full bounce when hitting walls
+      player.setCollideWorldBounds(true); // Prevent the player from going out of the screen
+      cursors = this.input.keyboard.createCursorKeys();
+    }
 
-# Player properties
-player_size = 20
-player_x = 50
-player_y = 50
+    function update() {
+      if (!moving) { // If not moving, check for arrow key press
+        if (cursors.left.isDown) {
+          moving = true;
+          velocityX = -160;
+          player.setAngle(90); // Rotate player sprite
+        } else if (cursors.right.isDown) {
+          moving = true;
+          velocityX = 160;
+          player.setAngle(-90); // Rotate player sprite
+        } else if (cursors.up.isDown) {
+          moving = true;
+          velocityY = -160;
+          player.setAngle(0); // Reset player rotation
+        } else if (cursors.down.isDown) {
+          moving = true;
+          velocityY = 160;
+          player.setAngle(180); // Rotate player sprite
+        }
+      }
 
-# Maze properties
-maze = [
-    "#############",
-    "#P          #",
-    "#           #",
-    "#           #",
-    "#           #",
-    "#           #",
-    "#           #",
-    "#           #",
-    "#############"
-]
+      player.setVelocity(velocityX, velocityY);
 
-# Game loop
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+      if (player.body.blocked.left || player.body.blocked.right) {
+        moving = false;
+        velocityX = -velocityX; // Reverse the horizontal velocity
+        player.setVelocityX(velocityX);
+      }
 
-        # Player movement
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                player_y -= player_size
-            elif event.key == pygame.K_DOWN:
-                player_y += player_size
-            elif event.key == pygame.K_LEFT:
-                player_x -= player_size
-            elif event.key == pygame.K_RIGHT:
-                player_x += player_size
-
-    # Check for collisions with maze walls
-    player_rect = pygame.Rect(player_x, player_y, player_size, player_size)
-    for row in range(len(maze)):
-        for col in range(len(maze[row])):
-            if maze[row][col] == "#":
-                wall_rect = pygame.Rect(col * player_size, row * player_size, player_size, player_size)
-                if player_rect.colliderect(wall_rect):
-                    player_x, player_y = 50, 50  # Reset player position
-
-    # Clear the screen
-    screen.fill(WHITE)
-
-    # Draw maze
-    for row in range(len(maze)):
-        for col in range(len(maze[row])):
-            if maze[row][col] == "#":
-                pygame.draw.rect(screen, BLACK, (col * player_size, row * player_size, player_size, player_size))
-
-    # Draw player
-    pygame.draw.rect(screen, RED, (player_x, player_y, player_size, player_size))
-
-    # Update the display
-    pygame.display.update()
-
-# Quit Pygame
-pygame.quit()
-sys.exit()
+      if (player.body.blocked.up || player.body.blocked.down) {
+        moving = false;
+        velocityY = -velocityY; // Reverse the vertical velocity
+        player.setVelocityY(velocityY);
+      }
+    }
+  </script>
+</body>
+</html>
